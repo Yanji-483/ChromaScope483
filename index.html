@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChromaScope By Salifyanji Mwalwembe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-container">
+        <h1>Welcome to ChromaScope, your colour detector assistant</h1>
+        <p class="subtitle">Upload an image and click any area to identify its colour</p>
+
+        <div class="upload-area">
+            <label for="image-upload" class="custom-file-upload">
+                Choose File
+            </label>
+            <span id="file-name">No file chosen</span>
+            <input type="file" accept="image/*" id="image-upload">
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+            <div id="colour-preview"></div>
+            <div id="colour-display">Click the uploaded image to identify its colours</div>
+        </div>
+
+        <div class="camera-section">
+            <video id="camera-feed" autoplay playsinline></video>
+            <button id="toggleCamera">Switch Camera</button>
+            <div id="live-colour-display">Point center of the cursor to detect its colour</div>
+        </div>
+    </div>
+
+    <canvas id="camera-canvas" style="display: none;"></canvas>
+    <script src="app.js"></script>
+</body>
+</html>
