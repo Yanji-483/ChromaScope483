@@ -1,51 +1,83 @@
 body {
-    font-family: Calibri, Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #e3f2fd; /* Light blue background  */
+    color: #4b2c71; /* Dark purple text */
     text-align: center;
-    margin: 50px;
-    background-color: #8a54ad00;
+    margin: 0;
+    padding: 50px 20px;
 }
 
-#canvas { /* Changed from #uploaded-image to #canvas */
-    max-width: 100%;
-    height: auto;
-    margin-top: 20px;
-    border: 1px solid #395e84;
-    cursor: crosshair;
-    display: none; /* Initially hide the canvas until an image is loaded */
-}
-
-#colour-display { /* Corrected ID to match HTML */
-    margin-top: 20px;
+h1 {
+    font-size: 2.5rem;
     font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #7a8ea3;
+    margin-bottom: 40px;
+}
+
+/* The purple button area */
+.upload-area {
+    background: linear-gradient(135deg, #8e74e8, #7353e5);
+    display: inline-flex;
+    align-items: center;
+    padding: 15px 30px;
+    border-radius: 50px;
+    box-shadow: 0 10px 20px rgba(115, 83, 229, 0.3);
+    color: white;
+    margin-bottom: 30px;
+}
+
+.custom-file-upload {
+    background: white;
+    color: #333;
+    padding: 5px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+input[type="file"] {
+    display: none; /* Hide the ugly default input */
+}
+
+#canvas {
+    max-width: 90%;
+    height: auto;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: white;
+    margin: 20px auto;
+    display: none;
+    cursor: crosshair;
 }
 
 #colour-preview {
     width: 100px;
     height: 100px;
     margin: 20px auto;
-    border: 2px solid #333;
-    background-color: #fff; /* This will be overridden by JS, but good to have a default */
+    border: 2px solid #fff;
+    background-color: transparent;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+#colour-display {
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Camera styles */
+.camera-section {
+    margin-top: 50px;
+    border-top: 1px solid #cfd8dc;
+    padding-top: 30px;
 }
 
 #camera-feed {
-    display: block;
     width: 100%;
-    max-width: 600px;
-    margin: 20px auto;
-    border: 1px solid #395e84;
-    cursor: crosshair;
-}
-
-#camera-feed {
-    position: relative;
-}
-
-#camera-feed::after {
-    content: "+";
-    position: absolute;
-    color: red;
-    font-size: 40px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    max-width: 400px;
+    border-radius: 15px;
+    border: 3px solid #7353e5;
 }

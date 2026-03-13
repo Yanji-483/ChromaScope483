@@ -1,168 +1,109 @@
 const imageInput = document.getElementById('image-upload');
 const canvas = document.getElementById('canvas');
-const colorDisplay = document.getElementById('colour-display'); // Corrected ID to match HTML
-const colourPreview = document.getElementById('colour-preview'); // Corrected ID to match HTML
+const colorDisplay = document.getElementById('colour-display');
+const colourPreview = document.getElementById('colour-preview');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-const ctx = canvas.getContext('2d'); //used for image processing
+// Camera Elements
+const video = document.getElementById('camera-feed');
+const camBtn = document.getElementById('toggleCamera');
+const liveDisplay = document.getElementById('live-colour-display');
+const camCanvas = document.getElementById('camera-canvas');
+const camCtx = camCanvas.getContext('2d');
 
-// Handle image upload
+let stream = null;
+
+// --- IMAGE UPLOAD LOGIC ---
 imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();
-
-    reader.onload = function (event) {
+    reader.onload = (event) => {
         const img = new Image();
-        img.src = event.target.result;
-
-        img.onload = function() {
+        img.onload = () => {
             canvas.width = img.width;
             canvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
-            canvas.style.display = 'block'; // Show the canvas once the image is drawn
-            colorDisplay.innerText = "Click the image to identify its colors"; // Reset instruction
-            colourPreview.style.backgroundColor = '#fff'; // Reset preview
+            ctx.drawImage(img, 0, 0);
+            canvas.style.display = 'block';
+            colorDisplay.innerText = "Click the image to identify its colors";
         };
+        img.src = event.target.result;
     };
-
-    if (file) {
-        reader.readAsDataURL(file);
-    }
+    if (file) reader.readAsDataURL(file);
 });
 
-// Function to fetch accurate color names
-async function getColorNameFromAPI(hex) {
-    try {
-        const response = await fetch(`https://www.thecolorapi.com/id?hex=${hex.replace("#", "")}`); // Corrected template literal
-        const data = await response.json();
-        return data.name.value || "Unknown";
-    } catch (error) {
-        console.error("Error fetching color name:", error);
-        return "Unknown";
-    }
-}
+// Accurate Color Picking for Uploaded Image
+canvas.addEventListener('click', async (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
-// Handle color detection on canvas click
-canvas.addEventListener('click', async function (event) { // Changed listener to canvas
-    const rect = canvas.getBoundingClientRect(); // Get the bounding rectangle of the canvas
-    const x = event.clientX - rect.left; // Calculate x relative to the canvas
-    const y = event.clientY - rect.top;  // Calculate y relative to the canvas
+    const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
+    const hex = rgbToHex(r, g, b);
+    const name = await getColorName(hex);
 
-    // Make sure there is pixel data before color detection
-    const pixel = ctx.getImageData(x, y, 1, 1).data;
-
-    if (!pixel || pixel.length === 0) {
-        console.error("No pixel data found. Make sure the image is drawn on the canvas.");
-        return;
-    }
-
-    const [r, g, b] = pixel;
-
-    const hex = `#${r.toString(16).padStart(2, '0')}${g
-        .toString(16)
-        .padStart(2, '0')}${b.toString(16)
-        .padStart(2, '0')}`.toUpperCase();
-
-    const colorName = await getColorNameFromAPI(hex);
-
-    colorDisplay.innerText = `RGB: (${r}, ${g}, ${b}) | HEX: ${hex} | Name: ${colorName}`; // Added color name
-    colorDisplay.style.color = hex;
-
-    // Preview box
-    colourPreview.style.backgroundColor = hex; // Corrected ID
-});
-
-const video = document.getElementById('camera-feed');
-const cameraCanvas = document.getElementById('camera-canvas');//Hidden camvas for processing
-const livecolorDisplay = document.getElementById('live-colour-display');
-const toggleButton = document.getElementById('toggleCamera');
-const cameraCtx = cameraCanvas.getContext("2d"); //used for camera processing
-
-let currentStream;//Default rear camera
-let useBackCamera = true;
-function startCamera(){
-    const constraints = {video: {facingMode: useBackCamera ? "environment" : "user"}};
-
-    //Access camera
-navigator.mediaDevices.getUserMedia(constraints)
-    .then(stream => {
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());}
-
-            currentStream = stream;
-            video.srcObject = stream;
-            video.onloadedmetadata = () => {video.play();
-}
-    })
-    .catch(error => console.error("camera access error:", error));
-}
-
-//Toggle between front and rear cameras when button is clicked
-toggleButton.addEventListener("click", () => {
-    useBackCamera = !useBackCamera;
-    startCamera();
-});
-
-
-//Draw frame and continuosly color at the center of the screen
-video.addEventListener('play', detectColorFromCamera);
-
-    function detectColorFromCamera() {
-         if (video.readyState >= 2) {
-
-             cameraCanvas.width = video.videoWidth;
-             cameraCanvas.height = video.videoHeight;
-    cameraCtx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
-
-    //Middle pixel of the screen that is cursor aligned
-    const centerX = Math.floor(cameraCanvas.width / 2);
-    const centerY = Math.floor(cameraCanvas.height / 2);
-    const pixel = cameraCtx.getImageData(centerX, centerY, 1, 1).data;
-
-    const [r, g, b] = pixel;
-    const hex = `#${r.toString(16)
-        .padStart(2, '0')}${g.toString(16)
-        .padStart(2, '0')}${b.toString(16)
-        .padStart(2, '0')}`.toUpperCase();
-
-livecolorDisplay.innerText = `Live RGB: (${r}, ${g}, ${b}) | HEX: ${hex}`;
-livecolorDisplay.style.color = hex;
-
-requestAnimationFrame(detectColorFromCamera); //continuosly update detection
-}
-video.addEventListener("loadeddata", () => {
-});
-detectColorFromCamera();
-};
-startCamera(); //Start camera feed
-
-// Handle color detection on video click
-video.addEventListener('click', async function (event) {
-    const rect = video.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    // Draw current frame to hidden canvas
-    cameraCanvas.width = video.videoWidth;
-    cameraCanvas.height = video.videoHeight;
-    cameraCtx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
-
-    // Scale click coordinates to video resolution
-    const scaleX = video.videoWidth / rect.width;
-    const scaleY = video.videoHeight / rect.height;
-    const pixelX = Math.floor(x * scaleX);
-    const pixelY = Math.floor(y * scaleY);
-
-    const pixel = cameraCtx.getImageData(pixelX, pixelY, 1, 1).data;
-    const [r, g, b] = pixel;
-
-    const hex = `#${r.toString(16).padStart(2, '0')}${g
-        .toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
-
-    const colorName = await getColorNameFromAPI(hex);
-
-    livecolorDisplay.innerText = `Clicked RGB: (${r}, ${g}, ${b}) | HEX: ${hex} | Name: ${colorName}`;
-    livecolorDisplay.style.color = hex;
-
-    // Update preview box
+    colorDisplay.innerText = `RGB: (${r}, ${g}, ${b}) | HEX: ${hex} | Name: ${name}`;
     colourPreview.style.backgroundColor = hex;
 });
+
+// --- LIVE CAMERA LOGIC ---
+camBtn.addEventListener('click', async () => {
+    if (stream) {
+        stopCamera();
+    } else {
+        try {
+            // Requests camera access
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" } 
+            });
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play();
+                processCameraFrame();
+            };
+        } catch (err) {
+            alert("Camera access denied. Check your browser permissions!");
+        }
+    }
+});
+
+function processCameraFrame() {
+    if (!stream) return;
+
+    // Use the hidden canvas to process video frames
+    camCanvas.width = video.videoWidth;
+    camCanvas.height = video.videoHeight;
+    camCtx.drawImage(video, 0, 0, camCanvas.width, camCanvas.height);
+    
+    // Pick the color from the center of the screen
+    const centerX = camCanvas.width / 2;
+    const centerY = camCanvas.height / 2;
+    const [r, g, b] = camCtx.getImageData(centerX, centerY, 1, 1).data;
+    
+    const hex = rgbToHex(r, g, b);
+    liveDisplay.innerText = `Center Color: ${hex}`;
+    colourPreview.style.backgroundColor = hex;
+
+    requestAnimationFrame(processCameraFrame);
+}
+
+function stopCamera() {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+    video.srcObject = null;
+    liveDisplay.innerText = "Point center of the cursor to detect its colour";
+}
+
+// --- HELPERS ---
+function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+async function getColorName(hex) {
+    try {
+        const res = await fetch(`https://www.thecolorapi.com/id?hex=${hex.replace('#','')}`);
+        const data = await res.json();
+        return data.name.value;
+    } catch { return "Unknown"; }
+}
