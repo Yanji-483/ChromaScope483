@@ -1,0 +1,51 @@
+body {
+    font-family: Calibri, Arial, sans-serif;
+    text-align: center;
+    margin: 50px;
+    background-color: #8a54ad00;
+}
+
+#canvas { /* Changed from #uploaded-image to #canvas */
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+    border: 1px solid #395e84;
+    cursor: crosshair;
+    display: none; /* Initially hide the canvas until an image is loaded */
+}
+
+#colour-display { /* Corrected ID to match HTML */
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+#colour-preview {
+    width: 100px;
+    height: 100px;
+    margin: 20px auto;
+    border: 2px solid #333;
+    background-color: #fff; /* This will be overridden by JS, but good to have a default */
+}
+
+#camera-feed {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto;
+    border: 1px solid #395e84;
+    cursor: crosshair;
+}
+
+#camera-feed {
+    position: relative;
+}
+
+#camera-feed::after {
+    content: "+";
+    position: absolute;
+    color: red;
+    font-size: 40px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
